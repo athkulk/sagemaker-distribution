@@ -222,16 +222,20 @@ jq -n \
     isGitProject: ($isGitProject == "true")
   }' > "$HOME/.config/smus-storage-metadata.json"
 
+# Configure git credential helper and identity unconditionally for all projects.
+# This ensures git push/pull works from the terminal for repos cloned by the
+# SMUS Git backend into ~/shared/repos/ (Git v2 experience).
+git config --global credential.helper "!aws codecommit credential-helper --ignore-host-check \$@"
+git config --global credential.UseHttpPath true
+git config --global user.email "$email"
+git config --global user.name "$username"
+
 if [ $is_s3_storage_flag -ne 0 ]; then
   # Creating a directory where the repository will be cloned
   mkdir -p "$HOME/src"
 
   echo "Starting execution of Git Cloning script"
   bash /etc/sagemaker-ui/git_clone.sh
-
-  # Setting up the Git identity for the user .
-  git config --global user.email "$email"
-  git config --global user.name "$username"
   if [ -d "$HOME/shared" ]; then
     echo "Git project with /shared folder detected, creating README"
     bash /etc/sagemaker-ui/project-storage/create-storage-readme.sh
